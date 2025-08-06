@@ -1,0 +1,11 @@
+@startuml
+interface IPayment {
+    +pay(amount: float): bool
+}
+
+class CreditCardPayment implements IPayment {
+    +pay(amount: float): bool
+    +payNew(amount: float): bool
+
+}
+@enduml
