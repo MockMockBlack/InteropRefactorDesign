@@ -71,7 +71,7 @@ class NumericConverter extends PrimitiveConverter {
 }
 
 note right of NumericConverter
-  后两个方法是虚方法, 需要在子类中实现. 子类会坚持传入Numeric是否是自己的类型
+  后两个方法是虚方法, 需要在子类中实现. 子类会检查传入Numeric是否是自己的类型
 end note
 
 
@@ -130,6 +130,31 @@ class StringConverter extends PrimitiveConverter {
     + ConvertToStatic(napi_value jsValue): EtsObject *
     + ConvertToDynamic(etsObject: EtsObject *): napi_value
 }
+
+/' 
+ ' ==== Converter for reference ====
+ '/
+class ReferenceConverter implements ConverterBase {
+    - DynamicProxier: DynamicProxierBase *
+    - StaticProxier: DynamicProxierBase *
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
+    + ConvertToDynamic(etsObject: EtsObject *): napi_value
+    + GetDynamicProxier(): DynamicProxier *
+    + GetStaticProxier(): StaticProxier *
+}
+
+interface DynamicProxierBase {
+    + GetDynamicProxyClassCtor(): DynamicProxyClassCtor *
+    + CreateDynamicProxyInstance(etsObject: EtsObject *): napi_value
+}
+
+interface StaticProxierBase {
+    + GetStaticProxyClass(): EtsClass *
+    + CreateStaticProxyInstance(jsValue: napi_value): EtsObject *
+}
+
+ReferenceConverter ..> DynamicProxierBase : uses
+ReferenceConverter ..> StaticProxierBase : uses
 
 
 
