@@ -139,6 +139,10 @@ interface DynamicConverterBase {
     + ConvertToDynamic(etsObject: EtsObject *): napi_value
 }
 
+class UnimplementedDynamicConverter implements DynamicConverterBase {
+    + ConvertToDynamic(etsObject: EtsObject *): napi_value
+}
+
 class XRefObjectDynamicConverter implements DynamicConverterBase {
     + ConvertToDynamic(etsObject: EtsObject *): napi_value
 }
@@ -151,58 +155,7 @@ class JSValueDynamicConverter implements DynamicConverterBase {
     + ConvertToDynamic(etsObject: EtsObject *): napi_value
 }
 
-interface DynamicClassProxierBase extends DynamicConverterBase {
-    + GetProxiedDynamicClassCtor(): napi_value
-    + GetProxyClass(): EtsClass *
-    + CreateDynamicInstance(etsObject: EtsObject *): napi_value
-    + ConvertToDynamic(etsObject: EtsObject *): napi_value
-}
-
-class UnimplementedDynamicClassProxier implements DynamicClassProxierBase {
-    + GetProxiedDynamicClassCtor(): napi_value
-    + GetProxyClass(): EtsClass *
-    + CreateDynamicProxyInstance(etsObject: EtsObject *): napi_value
-    + ConvertToDynamic(etsObject: EtsObject *): napi_value
-}
-
-class ReflectDynamicClassProxier extends DynamicClassProxierBase {
-    - ProxiedDynamicClassCtor: napi_value
-    - ProxyClass: EtsClass *
-    + GetProxiedDynamicClassCtor(): napi_value
-    + GetProxyClass(): EtsClass *
-    + CreateDynamicProxyInstance(etsObject: EtsObject *): napi_value
-    + ConvertToDynamic(etsObject: EtsObject *): napi_value
-}
-
-/' 
- ' ==== Static Converter ====
- '/
-
-interface StaticConverterBase {
-    + ConvertToStatic(jsValue: napi_value): EtsObject *
-}
-
-class XRefObjectStaticConverter implements StaticConverterBase {
-    + ConvertToStatic(jsValue: napi_value): EtsObject *
-}
-
-note bottom of XRefObjectStaticConverter
-  从XrefObject中用动态对象查找到对应静态对象
-end note
-
-class JSValueStaticConverter implements StaticConverterBase {
-    + ConvertToStatic(jsValue: napi_value): EtsObject *
-}
-
-interface StaticClassProxierBase extends StaticConverterBase {
-    + GetProxiedStaticClass(): EtsClass *
-    + GetProxyClassCtor(): napi_value
-    + CreateStaticProxyInstance(jsValue: napi_value): EtsObject *
-    + ConvertToStatic(jsValue: napi_value): EtsObject *
-
-}
-
-class UnimplementedStaticClassProxier implements StaticClassProxierBase {
+interface StaticClassProxierBase extends DynamicConverterBase {
     + GetProxiedStaticClass(): EtsClass *
     + GetProxyClassCtor(): napi_value
     + CreateStaticProxyInstance(jsValue: napi_value): EtsObject *
@@ -218,6 +171,81 @@ class ReflectStaticClassProxier extends StaticClassProxierBase {
     + ConvertToStatic(jsValue: napi_value): EtsObject *
 }
 
+class FunctionStaticClassProxier extends StaticClassProxierBase {
+    - ProxiedStaticClass: EtsClass *
+    - ProxyClassCtor: napi_value
+    + GetProxiedStaticClass(): EtsClass *
+    + GetProxyClassCtor(): napi_value
+    + CreateStaticProxyInstance(jsValue: napi_value): EtsObject *
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
+}
+
+class TupleStaticClassProxier extends StaticClassProxierBase {
+    - ProxiedStaticClass: EtsClass *
+    - ProxyClassCtor: napi_value
+    + GetProxiedStaticClass(): EtsClass *
+    + GetProxyClassCtor(): napi_value
+    + CreateStaticProxyInstance(jsValue: napi_value): EtsObject *
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
+}
+
+class RecordStaticClassProxier extends StaticClassProxierBase {
+    - ProxiedStaticClass: EtsClass *
+    - ProxyClassCtor: napi_value
+    + GetProxiedStaticClass(): EtsClass *
+    + GetProxyClassCtor(): napi_value
+    + CreateStaticProxyInstance(jsValue: napi_value): EtsObject *
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
+}
+
+/' 
+ ' ==== Static Converter ====
+ '/
+
+interface StaticConverterBase {
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
+}
+
+class UnimplementedStaticConverter implements StaticConverterBase {
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
+}
+
+class XRefObjectStaticConverter implements StaticConverterBase {
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
+}
+
+note bottom of XRefObjectStaticConverter
+  从XrefObject中用动态对象查找到对应静态对象
+end note
+
+class JSValueStaticConverter implements StaticConverterBase {
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
+}
+
+interface DynamicClassProxierBase extends StaticConverterBase {
+    + GetProxiedDynamicClassCtor(): napi_value
+    + GetProxyClass(): EtsClass *
+    + CreateDynamicInstance(etsObject: EtsObject *): napi_value
+    + ConvertToDynamic(etsObject: EtsObject *): napi_value
+}
+
+class ReflectDynamicClassProxier extends DynamicClassProxierBase {
+    - ProxiedDynamicClassCtor: napi_value
+    - ProxyClass: EtsClass *
+    + GetProxiedDynamicClassCtor(): napi_value
+    + GetProxyClass(): EtsClass *
+    + CreateDynamicProxyInstance(etsObject: EtsObject *): napi_value
+    + ConvertToDynamic(etsObject: EtsObject *): napi_value
+}
+
+class FunctionDynamicClassProxier extends DynamicClassProxierBase {
+    - ProxiedDynamicClassCtor: napi_value
+    - ProxyClass: EtsClass *
+    + GetProxiedDynamicClassCtor(): napi_value
+    + GetProxyClass(): EtsClass *
+    + CreateDynamicProxyInstance(etsObject: EtsObject *): napi_value
+    + ConvertToDynamic(etsObject: EtsObject *): napi_value
+}
 
 /' 
  ' ==== Converter for reference ====
@@ -236,23 +264,16 @@ ReferenceConverter ..> StaticConverterBase : uses
 
 package Instances  {
 object ReflectDynamicClassConverter
-ReflectDynamicClassConverter ..> ReflectDynamicClassProxier : has
-ReflectDynamicClassConverter ..> UnimplementedStaticClassProxier : has
-
 object ReflectStaticClassConverter
-ReflectStaticClassConverter ..> UnimplementedDynamicClassProxier : has
-ReflectStaticClassConverter ..> ReflectStaticClassProxier : has
-
-object ReflectDynamicAndStaticClassConverter
-ReflectDynamicAndStaticClassConverter ..> ReflectDynamicClassProxier : has
-ReflectDynamicAndStaticClassConverter ..> ReflectStaticClassProxier : has
-
+object ArrayConverter
+object DateConverter
 object JSValueConverter
-JSValueConverter ..> JSValueDynamicConverter : has
-JSValueConverter ..> JSValueStaticConverter : has
+object FunctionConverter
+object TupleClassConverter
+object RecordClassConverter
 }
 
- ReferenceConverter --> Instances: instances
+ReferenceConverter --> Instances: instances
 
 
 
@@ -305,5 +326,43 @@ JSValueConverter ..> JSValueStaticConverter : has
 '     + ConvertToDynamic(etsObject: EtsObject *): napi_value
 ' }
 
+
+@enduml
+
+@startuml converterInstances
+
+package Instances  {
+object ReflectDynamicClassConverter
+ReflectDynamicClassConverter ..> ReflectDynamicClassProxier : has
+ReflectDynamicClassConverter ..> UnimplementedDynamicConverter : has
+
+object ReflectStaticClassConverter
+ReflectStaticClassConverter ..> UnimplementedStaticConverter : has
+ReflectStaticClassConverter ..> ReflectStaticClassProxier : has
+
+object ArrayConverter
+ArrayConverter ..> ReflectDynamicClassProxier : has
+ArrayConverter ..> ReflectStaticClassProxier : has
+
+object DateConverter
+DateConverter ..> ReflectDynamicClassProxier : has
+DateConverter ..> ReflectStaticClassProxier : has
+
+object JSValueConverter
+JSValueConverter ..> JSValueDynamicConverter : has
+JSValueConverter ..> JSValueStaticConverter : has
+
+object FunctionConverter
+FunctionConverter ..> FunctionDynamicClassProxier : has
+FunctionConverter ..> FunctionStaticClassProxier : has
+
+object TupleClassConverter
+TupleClassConverter ..> TupleStaticClassProxier : has
+TupleClassConverter ..> UnimplementedStaticConverter : has
+
+object RecordClassConverter
+RecordClassConverter ..> RecordStaticClassProxier : has
+RecordClassConverter ..> UnimplementedStaticConverter : has
+}
 
 @enduml
