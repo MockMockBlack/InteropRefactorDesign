@@ -1,0 +1,38 @@
+
+@startuml converterInstances
+
+package Instances  {
+object ReflectDynamicClassConverter
+ReflectDynamicClassConverter ..> ReflectDynamicClassProxier : has
+ReflectDynamicClassConverter ..> UnimplementedDynamicConverter : has
+
+object ReflectStaticClassConverter
+ReflectStaticClassConverter ..> UnimplementedStaticConverter : has
+ReflectStaticClassConverter ..> ReflectStaticClassProxier : has
+
+object ArrayConverter
+ArrayConverter ..> ReflectDynamicClassProxier : has
+ArrayConverter ..> ReflectStaticClassProxier : has
+
+object DateConverter
+DateConverter ..> ReflectDynamicClassProxier : has
+DateConverter ..> ReflectStaticClassProxier : has
+
+object JSValueConverter
+JSValueConverter ..> JSValueDynamicConverter : has
+JSValueConverter ..> JSValueStaticConverter : has
+
+object FunctionConverter
+FunctionConverter ..> FunctionDynamicClassProxier : has
+FunctionConverter ..> FunctionStaticClassProxier : has
+
+object TupleClassConverter
+TupleClassConverter ..> TupleStaticClassProxier : has
+TupleClassConverter ..> UnimplementedStaticConverter : has
+
+object RecordClassConverter
+RecordClassConverter ..> RecordStaticClassProxier : has
+RecordClassConverter ..> UnimplementedStaticConverter : has
+}
+
+@enduml
