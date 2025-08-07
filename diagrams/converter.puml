@@ -131,17 +131,10 @@ class StringConverter extends PrimitiveConverter {
     + ConvertToDynamic(etsObject: EtsObject *): napi_value
 }
 
+
 /' 
- ' ==== Converter for reference ====
+ ' ==== Proxiers ====
  '/
-class ReferenceConverter implements ConverterBase {
-    - DynamicProxier: DynamicClassProxierBase *
-    - StaticProxier: StaticClassProxierBase *
-    + ConvertToStatic(jsValue: napi_value): EtsObject *
-    + ConvertToDynamic(etsObject: EtsObject *): napi_value
-    + GetDynamicClassProxier(): DynamicProxier *
-    + GetStaticClassProxier(): StaticProxier *
-}
 
 interface DynamicClassProxierBase {
     + GetProxiedDynamicClassCtor(): napi_value
@@ -155,8 +148,17 @@ interface StaticClassProxierBase {
     + CreateStaticProxyInstance(jsValue: napi_value): EtsObject *
 }
 
-ReferenceConverter ..> DynamicClassProxierBase : uses
-ReferenceConverter ..> StaticClassProxierBase : uses
+class UnimplementedDynamicClassProxier implements DynamicClassProxierBase {
+    + GetProxiedDynamicClassCtor(): napi_value
+    + GetProxyClass(): EtsClass *
+    + CreateDynamicProxyInstance(etsObject: EtsObject *): napi_value
+}
+
+class UnimplementedStaticClassProxier implements StaticClassProxierBase {
+    + GetProxiedStaticClass(): EtsClass *
+    + GetProxyClassCtor(): napi_value
+    + CreateStaticProxyInstance(jsValue: napi_value): EtsObject *
+}
 
 class ReflectDynamicClassProxier extends DynamicClassProxierBase {
     - ProxiedDynamicClassCtor: napi_value
@@ -174,42 +176,89 @@ class ReflectStaticClassProxier extends StaticClassProxierBase {
     + CreateStaticProxyInstance(jsValue: napi_value): EtsObject *
 }
 
-class ReflectDynamicClassConverter extends ReferenceConverter {
-    - DynamicProxier: ReflectDynamicClassProxier *
+
+
+/' 
+ ' ==== Converter for reference ====
+ '/
+class ReferenceConverter implements ConverterBase {
+    - DynamicProxier: DynamicClassProxierBase *
+    - StaticProxier: StaticClassProxierBase *
     + ConvertToStatic(jsValue: napi_value): EtsObject *
     + ConvertToDynamic(etsObject: EtsObject *): napi_value
 }
 
-ReflectDynamicClassConverter ..> ReflectDynamicClassProxier : uses
+ReferenceConverter ..> DynamicClassProxierBase : uses
+ReferenceConverter ..> StaticClassProxierBase : uses
 
-note bottom of ReflectDynamicClassConverter
-  1.0的一个对象到1.2, 成为一个把所有属性访问/方法调用都转发到1.0的对象
-  ConvertToDynamic方法无效, 会抛出异常
-end note
+object ReflectDynamicClassConverter
 
-class ReflectStaticClassConverter extends ReferenceConverter {
-    - StaticProxier: ReflectStaticClassProxier *
-    + ConvertToStatic(jsValue: napi_value): EtsObject *
-    + ConvertToDynamic(etsObject: EtsObject *): napi_value
-}
+ReflectDynamicClassConverter --> ReferenceConverter: instanceof
+ReflectDynamicClassConverter ..> ReflectDynamicClassProxier : has
+ReflectDynamicClassConverter ..> UnimplementedStaticClassProxier : has
 
-ReflectStaticClassConverter ..> ReflectStaticClassProxier : uses
+object ReflectStaticClassConverter
 
-note bottom of ReflectStaticClassConverter
-  1.2的一个对象到1.0, 成为一个把所有属性访问/方法调用都转发到1.2的对象
-  ConvertToStatic方法无效, 会抛出异常
-end note
+ReflectStaticClassConverter --> ReferenceConverter: instanceof
+ReflectStaticClassConverter ..> UnimplementedDynamicClassProxier : has
+ReflectStaticClassConverter ..> ReflectStaticClassProxier : has
 
-class ReflectDynamicAndStaticClassConverter extends ReferenceConverter {
-    - DynamicProxier: ReflectDynamicClassProxier *
-    - StaticProxier: ReflectStaticClassProxier *
-    + ConvertToStatic(jsValue: napi_value): EtsObject *
-    + ConvertToDynamic(etsObject: EtsObject *): napi_value
-}
 
-ReflectDynamicAndStaticClassConverter ..> ReflectDynamicClassProxier : uses
-ReflectDynamicAndStaticClassConverter ..> ReflectStaticClassProxier : uses
 
+
+'ReflectDynamicClassConverter: ReferenceConverter;
+'object ReflectDynamicClassConverter : ReferenceConverter
+
+
+
+
+
+
+' class ReflectDynamicClassConverter extends ReferenceConverter {
+'     - DynamicProxier: ReflectDynamicClassProxier *
+'     + ConvertToStatic(jsValue: napi_value): EtsObject *
+'     + ConvertToDynamic(etsObject: EtsObject *): napi_value
+' }
+
+' ReflectDynamicClassConverter ..> ReflectDynamicClassProxier : uses
+
+' note bottom of ReflectDynamicClassConverter
+'   1.0的一个对象到1.2, 成为一个把所有属性访问/方法调用都转发到1.0的对象
+'   ConvertToDynamic方法无效, 会抛出异常
+' end note
+
+' class ReflectStaticClassConverter extends ReferenceConverter {
+'     - StaticProxier: ReflectStaticClassProxier *
+'     + ConvertToStatic(jsValue: napi_value): EtsObject *
+'     + ConvertToDynamic(etsObject: EtsObject *): napi_value
+' }
+
+' ReflectStaticClassConverter ..> ReflectStaticClassProxier : uses
+
+' note bottom of ReflectStaticClassConverter
+'   1.2的一个对象到1.0, 成为一个把所有属性访问/方法调用都转发到1.2的对象
+'   ConvertToStatic方法无效, 会抛出异常
+' end note
+
+' class ReflectDynamicAndStaticClassConverter extends ReferenceConverter {
+'     - DynamicProxier: ReflectDynamicClassProxier *
+'     - StaticProxier: ReflectStaticClassProxier *
+'     + ConvertToStatic(jsValue: napi_value): EtsObject *
+'     + ConvertToDynamic(etsObject: EtsObject *): napi_value
+' }
+
+' ReflectDynamicAndStaticClassConverter ..> ReflectDynamicClassProxier : uses
+' ReflectDynamicAndStaticClassConverter ..> ReflectStaticClassProxier : uses
+
+' class JSValueConverter extends ReferenceConverter {
+'     + ConvertToStatic(jsValue: napi_value): EtsObject *
+'     + ConvertToDynamic(etsObject: EtsObject *): napi_value
+' }
+
+' class TupleStaticClassConverter extends ReferenceConverter {
+'     + ConvertToStatic(jsValue: napi_value): EtsObject *
+'     + ConvertToDynamic(etsObject: EtsObject *): napi_value
+' }
 
 
 @enduml
