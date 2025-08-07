@@ -135,26 +135,44 @@ class StringConverter extends PrimitiveConverter {
  ' ==== Converter for reference ====
  '/
 class ReferenceConverter implements ConverterBase {
-    - DynamicProxier: DynamicProxierBase *
-    - StaticProxier: DynamicProxierBase *
+    - DynamicProxier: DynamicClassProxierBase *
+    - StaticProxier: StaticClassProxierBase *
     + ConvertToStatic(jsValue: napi_value): EtsObject *
     + ConvertToDynamic(etsObject: EtsObject *): napi_value
-    + GetDynamicProxier(): DynamicProxier *
-    + GetStaticProxier(): StaticProxier *
+    + GetDynamicClassProxier(): DynamicProxier *
+    + GetStaticClassProxier(): StaticProxier *
 }
 
-interface DynamicProxierBase {
-    + GetDynamicProxyClassCtor(): DynamicProxyClassCtor *
+interface DynamicClassProxierBase {
+    + GetProxiedDynamicClassCtor(): napi_value
+    + GetProxyClass(): EtsClass *
     + CreateDynamicProxyInstance(etsObject: EtsObject *): napi_value
 }
 
-interface StaticProxierBase {
-    + GetStaticProxyClass(): EtsClass *
+interface StaticClassProxierBase {
+    + GetProxiedStaticClass(): EtsClass *
+    + GetProxyClassCtor(): napi_value
     + CreateStaticProxyInstance(jsValue: napi_value): EtsObject *
 }
 
-ReferenceConverter ..> DynamicProxierBase : uses
-ReferenceConverter ..> StaticProxierBase : uses
+ReferenceConverter ..> DynamicClassProxierBase : uses
+ReferenceConverter ..> StaticClassProxierBase : uses
+
+class ReflectDynamicClassProxier extends DynamicClassProxierBase {
+    - ProxiedDynamicClassCtor: napi_value
+    - ProxyClass: EtsClass *
+    + GetProxiedDynamicClassCtor(): napi_value
+    + GetProxyClass(): EtsClass *
+    + CreateDynamicProxyInstance(etsObject: EtsObject *): napi_value
+}
+
+class ReflectStaticClassProxier extends StaticClassProxierBase {
+    - ProxiedStaticClass: EtsClass *
+    - ProxyClassCtor: napi_value
+    + GetProxiedStaticClass(): EtsClass *
+    + GetProxyClassCtor(): napi_value
+    + CreateStaticProxyInstance(jsValue: napi_value): EtsObject *
+}
 
 
 
