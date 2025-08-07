@@ -131,12 +131,23 @@ class StringConverter extends PrimitiveConverter {
     + ConvertToDynamic(etsObject: EtsObject *): napi_value
 }
 
-
 /' 
  ' ==== Dynamic Converter ====
  '/
 
 interface DynamicConverterBase {
+    + ConvertToDynamic(etsObject: EtsObject *): napi_value
+}
+
+class XRefObjectDynamicConverter implements DynamicConverterBase {
+    + ConvertToDynamic(etsObject: EtsObject *): napi_value
+}
+
+note bottom of XRefObjectDynamicConverter
+  从XrefObject中用静态对象查找到对应的动态对象
+end note
+
+class JSValueDynamicConverter implements DynamicConverterBase {
     + ConvertToDynamic(etsObject: EtsObject *): napi_value
 }
 
@@ -168,6 +179,18 @@ class ReflectDynamicClassProxier extends DynamicClassProxierBase {
  '/
 
 interface StaticConverterBase {
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
+}
+
+class XRefObjectStaticConverter implements StaticConverterBase {
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
+}
+
+note bottom of XRefObjectStaticConverter
+  从XrefObject中用动态对象查找到对应静态对象
+end note
+
+class JSValueStaticConverter implements StaticConverterBase {
     + ConvertToStatic(jsValue: napi_value): EtsObject *
 }
 
@@ -209,21 +232,27 @@ class ReferenceConverter implements ConverterBase {
 ReferenceConverter ..> DynamicConverterBase : uses
 ReferenceConverter ..> StaticConverterBase : uses
 
+
+
+package Instances  {
 object ReflectDynamicClassConverter
-ReflectDynamicClassConverter --> ReferenceConverter: instanceof
 ReflectDynamicClassConverter ..> ReflectDynamicClassProxier : has
 ReflectDynamicClassConverter ..> UnimplementedStaticClassProxier : has
 
 object ReflectStaticClassConverter
-ReflectStaticClassConverter --> ReferenceConverter: instanceof
 ReflectStaticClassConverter ..> UnimplementedDynamicClassProxier : has
 ReflectStaticClassConverter ..> ReflectStaticClassProxier : has
 
 object ReflectDynamicAndStaticClassConverter
-ReflectDynamicAndStaticClassConverter --> ReferenceConverter: instanceof
 ReflectDynamicAndStaticClassConverter ..> ReflectDynamicClassProxier : has
 ReflectDynamicAndStaticClassConverter ..> ReflectStaticClassProxier : has
 
+object JSValueConverter
+JSValueConverter ..> JSValueDynamicConverter : has
+JSValueConverter ..> JSValueStaticConverter : has
+}
+
+ ReferenceConverter --> Instances: instances
 
 
 
@@ -244,10 +273,7 @@ ReflectDynamicAndStaticClassConverter ..> ReflectStaticClassProxier : has
 
 ' ReflectDynamicClassConverter ..> ReflectDynamicClassProxier : uses
 
-' note bottom of ReflectDynamicClassConverter
-'   1.0的一个对象到1.2, 成为一个把所有属性访问/方法调用都转发到1.0的对象
-'   ConvertToDynamic方法无效, 会抛出异常
-' end note
+
 
 ' class ReflectStaticClassConverter extends ReferenceConverter {
 '     - StaticProxier: ReflectStaticClassProxier *
@@ -257,10 +283,7 @@ ReflectDynamicAndStaticClassConverter ..> ReflectStaticClassProxier : has
 
 ' ReflectStaticClassConverter ..> ReflectStaticClassProxier : uses
 
-' note bottom of ReflectStaticClassConverter
-'   1.2的一个对象到1.0, 成为一个把所有属性访问/方法调用都转发到1.2的对象
-'   ConvertToStatic方法无效, 会抛出异常
-' end note
+
 
 ' class ReflectDynamicAndStaticClassConverter extends ReferenceConverter {
 '     - DynamicProxier: ReflectDynamicClassProxier *
