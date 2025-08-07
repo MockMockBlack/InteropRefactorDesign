@@ -1,11 +1,70 @@
-@startuml
-interface IPayment {
-    +pay(amount: float): bool
+@startuml converter
+
+enum NumericType {
+    Boolean
+    Byte
+    Short
+    Int
+    Long
+    Float
+    Double
 }
 
-class CreditCardPayment implements IPayment {
-    +pay(amount: float): bool
-    +payNew(amount: float): bool
+class Numeric {
+    - value: U64
+    - type: NumericType
 
+    + static FromBoolean(value: bool): Numeric
+    + static FromByte(value: uint8): Numeric
+    + static FromShort(value: uint16): Numeric
+    + static FromInt(value: int32): Numeric
+    + static FromLong(value: int64): Numeric
+    + static FromFloat(value: float32): Numeric
+    + static FromDouble(value: float64): Numeric
+    + ToBoolean(): bool
+    + ToByte(): uint8
+    + ToShort(): uint16
+    + ToInt(): int32
+    + ToLong(): int64
+    + ToFloat(): float32
+    + ToDouble(): float64
+    + GetType(): NumericType
 }
+
+Numeric *-- NumericType : has
+
+
+interface ConverterBase {
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
+    + ConvertToDynamic(etsObject: EtsObject *): napi_value
+}
+
+class PrimitiveConverter implements ConverterBase {
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
+    + ConvertToDynamic(etsObject: EtsObject *): napi_value
+}
+
+class NumericConverter extends PrimitiveConverter {
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
+    + ConvertToDynamic(etsObject: EtsObject *): napi_value
+
+    + ConvertToStatic(jsValue: napi_value, type: NumericType = Double): Numeric
+    + ConvertToDynamic(numeric: Numeric): napi_value
+}
+NumericConverter ..> Numeric : uses
+NumericConverter ..> NumericType : uses
+
+class BooleanConverter extends NumericConverter {
+    + ConvertToStatic(napi_value jsValue): EtsObject *
+    + ConvertToDynamic(etsObject: EtsObject *): napi_value
+}
+
+class StringConverter extends PrimitiveConverter {
+    + ConvertToStatic(napi_value jsValue): EtsObject *
+    + ConvertToDynamic(etsObject: EtsObject *): napi_value
+}
+
+
+
+
 @enduml
