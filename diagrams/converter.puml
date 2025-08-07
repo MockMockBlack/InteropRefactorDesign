@@ -14,13 +14,13 @@ class Numeric {
     - value: U64
     - type: NumericType
 
-    + static FromBoolean(value: bool): Numeric
-    + static FromByte(value: uint8): Numeric
-    + static FromShort(value: uint16): Numeric
-    + static FromInt(value: int32): Numeric
-    + static FromLong(value: int64): Numeric
-    + static FromFloat(value: float32): Numeric
-    + static FromDouble(value: float64): Numeric
+    + **static** FromBoolean(value: bool): Numeric
+    + **static** FromByte(value: uint8): Numeric
+    + **static** FromShort(value: uint16): Numeric
+    + **static** FromInt(value: int32): Numeric
+    + **static** FromLong(value: int64): Numeric
+    + **static** FromFloat(value: float32): Numeric
+    + **static** FromDouble(value: float64): Numeric
     + ToBoolean(): bool
     + ToByte(): uint8
     + ToShort(): uint16
@@ -39,24 +39,91 @@ interface ConverterBase {
     + ConvertToDynamic(etsObject: EtsObject *): napi_value
 }
 
+
+/' 
+ ' ==== Converter for null and undefind ====
+ '/
+
+class NullTypeConverter implements ConverterBase {
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
+    + ConvertToDynamic(etsObject: EtsObject *): napi_value
+}
+
+class UndefinedConverter implements ConverterBase {
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
+    + ConvertToDynamic(etsObject: EtsObject *): napi_value
+}
+
 class PrimitiveConverter implements ConverterBase {
     + ConvertToStatic(jsValue: napi_value): EtsObject *
     + ConvertToDynamic(etsObject: EtsObject *): napi_value
 }
 
+/' 
+ ' ==== Converter for numeric types ====
+ '/
 class NumericConverter extends PrimitiveConverter {
     + ConvertToStatic(jsValue: napi_value): EtsObject *
     + ConvertToDynamic(etsObject: EtsObject *): napi_value
 
-    + ConvertToStatic(jsValue: napi_value, type: NumericType = Double): Numeric
-    + ConvertToDynamic(numeric: Numeric): napi_value
+    + **virtual** ConvertToStatic(jsValue: napi_value): Numeric
+    + **virtual** ConvertToDynamic(numeric: Numeric): napi_value
 }
+
+note right of NumericConverter
+  后两个方法是虚方法, 需要在子类中实现. 子类会坚持传入Numeric是否是自己的类型
+end note
+
+
 NumericConverter ..> Numeric : uses
 NumericConverter ..> NumericType : uses
 
 class BooleanConverter extends NumericConverter {
-    + ConvertToStatic(napi_value jsValue): EtsObject *
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
     + ConvertToDynamic(etsObject: EtsObject *): napi_value
+
+    + ConvertToStatic(jsValue: napi_value): Numeric
+    + ConvertToDynamic(numeric: Numeric): napi_value
+}
+
+class ByteConverter extends NumericConverter {
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
+    + ConvertToDynamic(etsObject: EtsObject *): napi_value
+
+    + ConvertToStatic(jsValue: napi_value): Numeric
+    + ConvertToDynamic(numeric: Numeric): napi_value
+}
+
+class ShortConverter extends NumericConverter {
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
+    + ConvertToDynamic(etsObject: EtsObject *): napi_value
+
+    + ConvertToStatic(jsValue: napi_value): Numeric
+    + ConvertToDynamic(numeric: Numeric): napi_value
+}
+
+class LongConverter extends NumericConverter {
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
+    + ConvertToDynamic(etsObject: EtsObject *): napi_value
+
+    + ConvertToStatic(jsValue: napi_value): Numeric
+    + ConvertToDynamic(numeric: Numeric): napi_value
+}
+
+class FloatConverter extends NumericConverter {
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
+    + ConvertToDynamic(etsObject: EtsObject *): napi_value
+
+    + ConvertToStatic(jsValue: napi_value): Numeric
+    + ConvertToDynamic(numeric: Numeric): napi_value
+}
+
+class DoubleConverter extends NumericConverter {
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
+    + ConvertToDynamic(etsObject: EtsObject *): napi_value
+
+    + ConvertToStatic(jsValue: napi_value): Numeric
+    + ConvertToDynamic(numeric: Numeric): napi_value
 }
 
 class StringConverter extends PrimitiveConverter {
