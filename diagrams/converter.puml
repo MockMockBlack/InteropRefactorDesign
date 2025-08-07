@@ -133,31 +133,25 @@ class StringConverter extends PrimitiveConverter {
 
 
 /' 
- ' ==== Proxiers ====
+ ' ==== Dynamic Converter ====
  '/
 
-interface DynamicClassProxierBase {
-    + GetProxiedDynamicClassCtor(): napi_value
-    + GetProxyClass(): EtsClass *
-    + CreateDynamicProxyInstance(etsObject: EtsObject *): napi_value
+interface DynamicConverterBase {
+    + ConvertToDynamic(etsObject: EtsObject *): napi_value
 }
 
-interface StaticClassProxierBase {
-    + GetProxiedStaticClass(): EtsClass *
-    + GetProxyClassCtor(): napi_value
-    + CreateStaticProxyInstance(jsValue: napi_value): EtsObject *
+interface DynamicClassProxierBase extends DynamicConverterBase {
+    + GetProxiedDynamicClassCtor(): napi_value
+    + GetProxyClass(): EtsClass *
+    + CreateDynamicInstance(etsObject: EtsObject *): napi_value
+    + ConvertToDynamic(etsObject: EtsObject *): napi_value
 }
 
 class UnimplementedDynamicClassProxier implements DynamicClassProxierBase {
     + GetProxiedDynamicClassCtor(): napi_value
     + GetProxyClass(): EtsClass *
     + CreateDynamicProxyInstance(etsObject: EtsObject *): napi_value
-}
-
-class UnimplementedStaticClassProxier implements StaticClassProxierBase {
-    + GetProxiedStaticClass(): EtsClass *
-    + GetProxyClassCtor(): napi_value
-    + CreateStaticProxyInstance(jsValue: napi_value): EtsObject *
+    + ConvertToDynamic(etsObject: EtsObject *): napi_value
 }
 
 class ReflectDynamicClassProxier extends DynamicClassProxierBase {
@@ -166,6 +160,30 @@ class ReflectDynamicClassProxier extends DynamicClassProxierBase {
     + GetProxiedDynamicClassCtor(): napi_value
     + GetProxyClass(): EtsClass *
     + CreateDynamicProxyInstance(etsObject: EtsObject *): napi_value
+    + ConvertToDynamic(etsObject: EtsObject *): napi_value
+}
+
+/' 
+ ' ==== Static Converter ====
+ '/
+
+interface StaticConverterBase {
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
+}
+
+interface StaticClassProxierBase extends StaticConverterBase {
+    + GetProxiedStaticClass(): EtsClass *
+    + GetProxyClassCtor(): napi_value
+    + CreateStaticProxyInstance(jsValue: napi_value): EtsObject *
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
+
+}
+
+class UnimplementedStaticClassProxier implements StaticClassProxierBase {
+    + GetProxiedStaticClass(): EtsClass *
+    + GetProxyClassCtor(): napi_value
+    + CreateStaticProxyInstance(jsValue: napi_value): EtsObject *
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
 }
 
 class ReflectStaticClassProxier extends StaticClassProxierBase {
@@ -174,34 +192,38 @@ class ReflectStaticClassProxier extends StaticClassProxierBase {
     + GetProxiedStaticClass(): EtsClass *
     + GetProxyClassCtor(): napi_value
     + CreateStaticProxyInstance(jsValue: napi_value): EtsObject *
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
 }
-
 
 
 /' 
  ' ==== Converter for reference ====
  '/
 class ReferenceConverter implements ConverterBase {
-    - DynamicProxier: DynamicClassProxierBase *
-    - StaticProxier: StaticClassProxierBase *
+    - DynamicConvert: DynamicConverterBase *
+    - StaticConvert: StaticConverterBase *
     + ConvertToStatic(jsValue: napi_value): EtsObject *
     + ConvertToDynamic(etsObject: EtsObject *): napi_value
 }
 
-ReferenceConverter ..> DynamicClassProxierBase : uses
-ReferenceConverter ..> StaticClassProxierBase : uses
+ReferenceConverter ..> DynamicConverterBase : uses
+ReferenceConverter ..> StaticConverterBase : uses
 
 object ReflectDynamicClassConverter
-
 ReflectDynamicClassConverter --> ReferenceConverter: instanceof
 ReflectDynamicClassConverter ..> ReflectDynamicClassProxier : has
 ReflectDynamicClassConverter ..> UnimplementedStaticClassProxier : has
 
 object ReflectStaticClassConverter
-
 ReflectStaticClassConverter --> ReferenceConverter: instanceof
 ReflectStaticClassConverter ..> UnimplementedDynamicClassProxier : has
 ReflectStaticClassConverter ..> ReflectStaticClassProxier : has
+
+object ReflectDynamicAndStaticClassConverter
+ReflectDynamicAndStaticClassConverter --> ReferenceConverter: instanceof
+ReflectDynamicAndStaticClassConverter ..> ReflectDynamicClassProxier : has
+ReflectDynamicAndStaticClassConverter ..> ReflectStaticClassProxier : has
+
 
 
 
