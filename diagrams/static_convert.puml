@@ -1,0 +1,99 @@
+@startuml static_converter
+
+interface StaticConverterBase {
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
+}
+
+class UnimplementedStaticConverter implements StaticConverterBase {
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
+}
+
+/' 
+ ' ==== Primitive Converter ==
+ '/
+interface PrimitiveStaticConverter extends StaticConverterBase {
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
+}
+
+class UndefinedStaticConverter implements PrimitiveStaticConverter {
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
+}
+
+class NullStaticConverter implements PrimitiveStaticConverter {
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
+}
+
+class BooleanStaticConverter implements PrimitiveStaticConverter {
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
+}
+
+class NumerStaticConverter implements PrimitiveStaticConverter {
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
+}
+
+class BigintStaticConverter implements PrimitiveStaticConverter {
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
+}
+
+class StringStaticConverter implements PrimitiveStaticConverter {
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
+}
+
+
+/' 
+ ' ==== Reference Converter ==
+ '/
+interface ReferenceStaticConverter extends StaticConverterBase {
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
+}
+
+note top of ReferenceStaticConverter
+  查找sharedReference的逻辑在这之前, 没查到才会进Converter
+end note
+
+class ToJSValueStaticConverter implements ReferenceStaticConverter {
+    + GetDynamicProxiedClassCtor(): napi_value
+    + GetStaticProxierClass(): EtsClass *
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
+}
+
+interface ProxiedStaticConverter extends ReferenceStaticConverter {
+    + GetDynamicProxiedClassCtor(): napi_value
+    + GetStaticProxierClass(): EtsClass *
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
+}
+
+class AllProxiedStaticConverter implements ProxiedStaticConverter {
+    + GetDynamicProxiedClassCtor(): napi_value
+    + GetStaticProxierClass(): EtsClass *
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
+}
+
+note bottom of AllProxiedStaticConverter
+  静态代理对象会把所有方法&属性访问代理到动态, 许多Builtin类型都可以使用这个, 比如Array, Map等
+end note
+
+
+class MethodProxiedStaticConverter implements ProxiedStaticConverter {
+    + GetDynamicProxiedClassCtor(): napi_value
+    + GetStaticProxierClass(): EtsClass *
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
+}
+
+class FieldProxiedStaticConverter implements ProxiedStaticConverter {
+    + GetDynamicProxiedClassCtor(): napi_value
+    + GetStaticProxierClass(): EtsClass *
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
+}
+
+class CustomProxiedStaticConverter implements ProxiedStaticConverter {
+    + GetDynamicProxiedClassCtor(): napi_value
+    + GetStaticProxierClass(): EtsClass *
+    + ConvertToStatic(jsValue: napi_value): EtsObject *
+}
+
+note bottom of CustomProxiedStaticConverter
+  可以自定义需要处理的方法和属性, 只代理这些方法和属性, 可以自定义代理逻辑, 如Tuple, Record等可以使用这个
+end note
+
+@enduml

@@ -273,9 +273,6 @@ object RecordClassConverter
 
 ReferenceConverter --> Instances: instances
 
-note bottom of instances
-  详细见instances.puml
-end note
 
 
 

@@ -1,7 +1,4 @@
 # README
 
-Diagram of the Converter  
-![converter](diagrams/generated_svgs/converter.svg)
-
-Instances of the Converter
-![instances](diagrams/generated_svgs/instances.svg)
+Diagram of the Converter From Dynamic to Static
+![static_converter](diagrams/generated_svgs/static_converter.svg)
